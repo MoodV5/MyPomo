@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyPomo - ポモドーロ＆タスク管理</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-layout">
+        <div class="view-container">
+                        <div class="app-container view-section" id="timer-view">
+                <header>
+                    <h1><i class="fa-solid fa-stopwatch"></i> Timer</h1>
+                </header>
+
+                <section class="timer-section">
+                    <div class="session-indicator" id="session-indicator">
+                        <span id="session-label">Pomodoro</span>
+                        <span id="session-count">1/4</span>
+                    </div>
+                    
+                    <div class="circular-timer-container">
+                        <svg class="circular-timer" viewBox="0 0 100 100">
+                            <circle class="timer-bg" cx="50" cy="50" r="45"></circle>
+                            <circle class="timer-progress" cx="50" cy="50" r="45" id="timer-progress"></circle>
+                        </svg>
+                        <div class="timer-display" id="timer-display">
+                            25:00
+                        </div>
+                    </div>
+
+                    <div class="timer-controls">
+                        <button id="btn-toggle" class="btn-primary"><i class="fa-solid fa-play"></i> START</button>
+                        <button id="btn-skip" class="btn-secondary" title="Skip to next phase"><i class="fa-solid fa-forward-step"></i></button>
+                        <button id="btn-reset" class="btn-outline" title="Reset timer"><i class="fa-solid fa-rotate-right"></i></button>
+                    </div>
+                </section>
+            </div>
+
+                        <div class="app-container view-section hidden" id="task-view">
+                <header>
+                    <h1><i class="fa-solid fa-list"></i> Tasks</h1>
+                </header>
+                <section class="task-section">
+                    <form id="task-form" class="task-form">
+                        <input type="text" id="task-input" placeholder="What are you working on?" autocomplete="off">
+                        <button type="submit" class="btn-submit"><i class="fa-solid fa-plus"></i></button>
+                    </form>
+                    
+                    <div class="error-message" id="error-message"></div>
+
+                    <div class="task-filters">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="active">Active</button>
+                        <button class="filter-btn" data-filter="completed">Completed</button>
+                    </div>
+
+                    <ul id="task-list" class="task-list">
+                    </ul>
+                </section>
+            </div>
+
+                        <div class="app-container view-section hidden" id="stats-view">
+                <header>
+                    <h1><i class="fa-solid fa-chart-simple"></i> Stats</h1>
+                </header>
+
+                <section class="stats-overview">
+                    <div class="stats-summary">
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-total-pomodoros">0</div>
+                            <div class="stat-label">Total Pomodoros</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-total-minutes">0</div>
+                            <div class="stat-label">Focus Minutes</div>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <h3>Last 7 Days (Minutes)</h3>
+                        <div class="bar-chart" id="bar-chart">
+                                                    </div>
+                    </div>
+                </section>
+
+                <section class="calendar-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                    <div class="calendar-header">
+                        <button id="prev-month" class="btn-outline"><i class="fa-solid fa-chevron-left"></i></button>
+                        <h3 id="current-month-year"></h3>
+                        <button id="next-month" class="btn-outline"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                    <div class="calendar-grid">
+                        <div class="day-name">Su</div>
+                        <div class="day-name">Mo</div>
+                        <div class="day-name">Tu</div>
+                        <div class="day-name">We</div>
+                        <div class="day-name">Th</div>
+                        <div class="day-name">Fr</div>
+                        <div class="day-name">Sa</div>
+                    </div>
+                    <div id="calendar-days" class="calendar-days"></div>
+                </section>
+            </div>
+
+                        <div class="app-container view-section hidden" id="detail-view">
+                <header>
+                    <button id="btn-back" class="btn-outline" style="margin-bottom: 20px;"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                    <h1 id="detail-date-title">Date Details</h1>
+                    <p>この日に完了したタスク</p>
+                </header>
+                <section class="task-section">
+                    <ul id="detail-task-list" class="task-list">
+                                            </ul>
+                </section>
+            </div>
+
+                        <div class="app-container view-section hidden" id="settings-view">
+                <header>
+                    <h1><i class="fa-solid fa-gear"></i> Settings</h1>
+                </header>
+                <section class="settings-section">
+                    <div class="setting-group">
+                        <label for="work-duration">集中時間 (Pomodoro) - 分</label>
+                        <input type="number" id="work-duration" min="1" max="60" value="25">
+                    </div>
+                    <div class="setting-group">
+                        <label for="break-duration">小休憩時間 (Short Break) - 分</label>
+                        <input type="number" id="break-duration" min="1" max="60" value="5">
+                    </div>
+                    <div class="setting-group">
+                        <label for="long-break-duration">長休憩時間 (Long Break) - 分</label>
+                        <input type="number" id="long-break-duration" min="1" max="60" value="15">
+                    </div>
+                    <button id="btn-save-settings" class="btn-primary" style="width: 100%; margin-top: 20px;">保存して適用</button>
+                    <div id="settings-message" style="color: var(--accent-break); margin-top: 10px; font-size: 0.9rem; min-height: 20px;"></div>
+                </section>
+            </div>
+        </div>
+
+        <nav class="bottom-nav">
+            <div class="nav-links">
+                <div class="nav-cursor" id="nav-cursor"></div>
+                <button class="nav-btn active" data-target="timer-view">
+                    <i class="fa-solid fa-stopwatch"></i>
+                    <span class="nav-label">Timer</span>
+                </button>
+                <button class="nav-btn" data-target="task-view">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span class="nav-label">Tasks</span>
+                    <span class="badge" id="task-badge" style="display: none;">0</span>
+                </button>
+                <button class="nav-btn" data-target="stats-view">
+                    <i class="fa-solid fa-chart-simple"></i>
+                    <span class="nav-label">Stats</span>
+                </button>
+                <button class="nav-btn" data-target="settings-view">
+                    <i class="fa-solid fa-gear"></i>
+                    <span class="nav-label">Settings</span>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
