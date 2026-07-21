@@ -1,25 +1,24 @@
 const canvas = document.getElementById('space-canvas');
 const ctx = canvas.getContext('2d', { alpha: false });
-let width, height;
-let currentScene = 'timer-view'; 
+let w, h;
+let ima = 'timer-view'; 
+
 function resize() {
-    width = window.innerWidth;
-    height = window.innerHeight;
-    canvas.width = width;
-    canvas.height = height;
-    if (assetsLoaded) initScene();
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+    if (ok) initScene();
 }
 window.addEventListener('resize', resize);
-const rand = (min, max) => Math.random() * (max - min) + min;
-const randInt = (min, max) => Math.floor(rand(min, max + 1));
-const choose = (arr) => arr[Math.floor(Math.random() * arr.length)];
-const assets = {
+const R = (a, b) => Math.random() * (b - a) + a;
+
+const imgs = {
     'earth': 'assets/planet_earth.png',
     'lava': 'assets/planet_lava.png',
-    'desert': 'assets/planet_desert.png',
     'moon': 'assets/planet_moon.png',
     'gas': 'assets/planet_gas.png',
     'ringed': 'assets/planet_ringed.png',
+    'ice': 'assets/planet_ice.png',
+    'sun': 'assets/planet_sun.png',
     'galaxy': 'assets/galaxy.png',
     'blackhole': 'assets/blackhole.png',
     'nebula_red': 'assets/nebula_red.png',
@@ -27,105 +26,110 @@ const assets = {
     'nebula_purple': 'assets/nebula_purple.png',
     'nebula_green': 'assets/nebula_green.png'
 };
-const images = {};
-let assetsLoaded = false;
-let loadedCount = 0;
-const totalAssets = Object.keys(assets).length;
-for (let key in assets) {
-    const img = new Image();
-    img.onload = () => {
-        loadedCount++;
-        if (loadedCount === totalAssets) {
-            assetsLoaded = true;
-            resize();
-        }
+const dict = {};
+let ok = false;
+let c = 0;
+let t = Object.keys(imgs).length;
+for (let k in imgs) {
+    let piyo = new Image();
+    piyo.onload = () => {
+        c++;
+        if (c === t) { ok = true; resize(); }
     };
-    img.src = assets[key];
-    images[key] = img;
+    piyo.src = imgs[k];
+    dict[k] = piyo;
 }
-let celestialBodies = [];
-let activeNebula = null;
+let tama = [];
+let moya = null;
+
 function initScene() {
-    celestialBodies = [];
-    let planetTypes = [];
-    if (currentScene === 'timer-view') {
-        activeNebula = images['nebula_red'];
-        planetTypes = ['lava', 'desert', 'blackhole', 'gas'];
-    } else if (currentScene === 'task-view') {
-        activeNebula = images['nebula_blue'];
-        planetTypes = ['earth', 'moon', 'ringed', 'galaxy'];
-    } else if (currentScene === 'stats-view') {
-        activeNebula = images['nebula_purple'];
-        planetTypes = ['galaxy', 'moon', 'blackhole', 'earth', 'desert'];
-    } else if (currentScene === 'settings-view') {
-        activeNebula = images['nebula_green'];
-        planetTypes = ['gas', 'ringed', 'moon', 'lava'];
+    tama = [];
+    let nani = [];
+    
+    if (ima === 'timer-view') {
+        moya = dict['nebula_red'];
+        nani = ['lava', 'blackhole', 'gas', 'sun'];
+    } else if (ima === 'task-view') {
+        moya = dict['nebula_blue'];
+        nani = ['earth', 'moon', 'ringed', 'galaxy', 'ice'];
+    } else if (ima === 'stats-view') {
+        moya = dict['nebula_purple'];
+        nani = ['galaxy', 'moon', 'blackhole', 'earth', 'sun'];
+    } else if (ima === 'settings-view') {
+        moya = dict['nebula_green'];
+        nani = ['gas', 'ringed', 'moon', 'lava', 'ice'];
     }
-    for (let type of planetTypes) {
-        const radius = (type === 'galaxy' || type === 'blackhole') ? randInt(100, 200) : randInt(40, 100);
-        const x = rand(radius + 20, width - radius - 20);
-        const y = rand(radius + 20, height - radius - 20);
-        celestialBodies.push({
-            type: type,
-            img: images[type],
-            x: x,
-            y: y,
-            radius: radius
-        });
+    
+    for (let t of nani) {
+        let r = (Math.min(w, h) * R(0.05, 0.50)) / 2;
+        let x, y, kaburi = true, kai = 0;
+        
+        while (kaburi && kai < 500) {
+            x = R(r + 20, w - r - 20);
+            y = R(r + 20, h - r - 20);
+            kaburi = false;
+            
+            for (let e of tama) {
+                if (Math.hypot(x - e.x, y - e.y) < r + e.r + 30) {
+                    kaburi = true; break;
+                }
+            }
+            kai++;
+            if (kaburi && kai % 50 === 0) r *= 0.9;
+        }
+        
+        if (!kaburi) tama.push({ t, i: dict[t], x, y, r });
     }
     render(); 
 }
+
 function render() {
-    if (!assetsLoaded) return;
+    if (!ok) return;
+    
+    ctx.imageSmoothingEnabled = false;
     ctx.fillStyle = '#050510';
-    ctx.fillRect(0, 0, width, height);
-    if (activeNebula) {
+    ctx.fillRect(0, 0, w, h);
+    
+    if (moya) {
+        const bgOff = document.createElement('canvas');
+        bgOff.width = w * 0.2;
+        bgOff.height = h * 0.2;
+        const oCtx = bgOff.getContext('2d');
+        oCtx.imageSmoothingEnabled = true;
+        const sc = Math.max(bgOff.width / moya.width, bgOff.height / moya.height);
+        const dw = moya.width * sc, dh = moya.height * sc;
+        oCtx.drawImage(moya, (bgOff.width - dw) / 2, (bgOff.height - dh) / 2, dw, dh);
+        
         ctx.globalCompositeOperation = 'screen'; 
-        ctx.drawImage(activeNebula, 0, 0, width, height);
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(bgOff, 0, 0, bgOff.width, bgOff.height, 0, 0, w, h);
         ctx.globalCompositeOperation = 'source-over';
     }
-    ctx.fillStyle = '#ffffff';
-    for (let i = 0; i < 200; i++) {
-        ctx.globalAlpha = rand(0.2, 0.8);
-        const sx = rand(0, width);
-        const sy = rand(0, height);
-        const size = randInt(1, 2);
-        ctx.fillRect(sx, sy, size, size);
-    }
-    ctx.globalAlpha = 1.0;
-    celestialBodies.sort((a,b) => a.radius - b.radius);
-    ctx.imageSmoothingEnabled = false;
-    for (let obj of celestialBodies) {
-        const pixelationFactor = 0.2; 
-        const smallSize = obj.radius * 2 * pixelationFactor;
-        const offCanvas = document.createElement('canvas');
-        offCanvas.width = smallSize;
-        offCanvas.height = smallSize;
-        const offCtx = offCanvas.getContext('2d');
-        offCtx.imageSmoothingEnabled = false;
-        offCtx.drawImage(obj.img, 0, 0, smallSize, smallSize);
-        if (obj.type === 'galaxy' || obj.type === 'blackhole') {
+
+    tama.sort((a, b) => a.r - b.r);
+    for (let obj of tama) {
+        const s = obj.r * 2 * 0.2;
+        const off = document.createElement('canvas');
+        off.width = off.height = s;
+        const oCtx = off.getContext('2d');
+        oCtx.imageSmoothingEnabled = false;
+        oCtx.drawImage(obj.i, 0, 0, s, s);
+
+        if (['galaxy', 'blackhole', 'ringed'].includes(obj.t)) {
             ctx.globalCompositeOperation = 'screen';
-            ctx.drawImage(offCanvas, 0, 0, smallSize, smallSize, obj.x - obj.radius, obj.y - obj.radius, obj.radius * 2, obj.radius * 2);
+            ctx.drawImage(off, 0, 0, s, s, obj.x - obj.r, obj.y - obj.r, obj.r * 2, obj.r * 2);
             ctx.globalCompositeOperation = 'source-over';
         } else {
             ctx.save();
             ctx.beginPath();
-            ctx.arc(obj.x, obj.y, obj.radius * 0.95, 0, Math.PI * 2);
+            ctx.arc(obj.x, obj.y, obj.r * 0.86, 0, Math.PI * 2);
             ctx.clip();
-            ctx.drawImage(offCanvas, 0, 0, smallSize, smallSize, obj.x - obj.radius, obj.y - obj.radius, obj.radius * 2, obj.radius * 2);
+            ctx.drawImage(off, 0, 0, s, s, obj.x - obj.r, obj.y - obj.r, obj.r * 2, obj.r * 2);
             ctx.restore();
-            if (obj.type === 'ringed') {
-                ctx.globalCompositeOperation = 'screen';
-                ctx.drawImage(offCanvas, 0, 0, smallSize, smallSize, obj.x - obj.radius, obj.y - obj.radius, obj.radius * 2, obj.radius * 2);
-                ctx.globalCompositeOperation = 'source-over';
-            }
         }
     }
 }
-window.setSpaceScene = function(sceneId) {
-    if (currentScene !== sceneId) {
-        currentScene = sceneId;
-        initScene();
-    }
+
+window.setSpaceScene = function(id) {
+    if (ima !== id) { ima = id; initScene(); }
 };
